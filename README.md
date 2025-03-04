@@ -30,8 +30,8 @@
 
 ```bash
 # Required
-Node.js (>= 16.x)
-MySQL (>= 8.0)
+Node.js (>= 20.x)
+MySQL (>= 5.0)
 pnpm (>= 8.x)
 ```
 
