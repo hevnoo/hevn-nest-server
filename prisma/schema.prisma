@@ -1,0 +1,204 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model users {
+  id         String   @id @default(cuid())
+  username   String   @db.VarChar(36)
+  password   String   @db.VarChar(64)
+  email      String?  @db.VarChar(255)
+  phone      String?  @db.VarChar(15)
+  openid     String?  @db.VarChar(36) // 微信openid
+  nickname   String?  @db.VarChar(20)
+  head_img   String?  @db.VarChar(255)
+  status     String?  @db.VarChar(10)
+  // 通用字段
+  is_delete  Int      @default(0)
+  createtime DateTime @default(now())
+  updatetime DateTime @updatedAt
+  creator    String?  @db.Char(36)
+  updater    String?  @db.Char(36)
+
+  roles roles[] @relation("users_roles") // 反向关联，表示多对多关系，虚拟字段
+  post  post[] //反向关联
+
+  @@unique([email, is_delete]) // 复合唯一索引
+  @@unique([openid, is_delete])
+  @@unique([phone, is_delete])
+  @@unique([username, is_delete])
+}
+
+// 角色模型控制permission、menu、button等权限
+model roles {
+  id          String       @id @default(cuid())
+  name        String       @db.VarChar(36) // 角色名称（如 "admin", "user"）
+  value       String       @db.VarChar(36) // 角色值（如 "admin", "user"）
+  description String? // 角色描述
+  // 关联关系
+  users       users[]      @relation("users_roles") // 多对多
+  permission  permission[] @relation("roles_permission") // 多对多关系
+  menu        menu[]       @relation("roles_menu") // 与菜单多对多
+  buttons     buttons[]    @relation("roles_buttons") // 与按钮多对多
+  // 通用字段
+  is_delete   Int          @default(0)
+  createtime  DateTime     @default(now())
+  updatetime  DateTime     @updatedAt
+  creator     String?      @db.Char(36)
+  updater     String?      @db.Char(36)
+
+  @@unique([value, is_delete])
+}
+
+model permission {
+  id          String   @id @default(cuid())
+  name        String   @db.VarChar(36) // 权限名称（如 "view_user", "delete_user"）
+  value       String   @db.VarChar(36) // 权限值（如 "view_user", "delete_user"）
+  description String? // 权限描述
+  roles       roles[]  @relation("roles_permission") // 多对多关系
+  // 通用字段
+  is_delete   Int      @default(0)
+  createtime  DateTime @default(now())
+  updatetime  DateTime @updatedAt
+  creator     String?  @db.Char(36)
+  updater     String?  @db.Char(36)
+
+  @@unique([value, is_delete])
+}
+
+model menu {
+  id         String    @id @default(cuid())
+  label      String    @db.VarChar(50) // 菜单名称
+  value      String    @db.VarChar(50) // 菜单值
+  path       String?   @db.VarChar(100) // 路由路径
+  name       String?   @db.VarChar(100) // 路由名称
+  component  String?   @db.VarChar(100) // 组件路径
+  redirect   String?   @db.VarChar(100) // 重定向路径
+  meta       Json? // 存储元数据，包含 title、icon、keepAlive 等
+  // meta 示例: { "title": "系统管理", "icon": "SettingOutlined", "keepAlive": true }
+  icon       String?   @db.VarChar(50) // 图标
+  order      Int       @default(0) // 排序
+  hidden     Boolean   @default(false) // 是否隐藏
+  // 关联关系
+  parent_id  String? // 父级菜单ID
+  parent     menu?     @relation("menu_tree", fields: [parent_id], references: [id], onDelete: SetNull)
+  children   menu[]    @relation("menu_tree")
+  roles      roles[]   @relation("roles_menu") // 与角色多对多
+  buttons    buttons[] // 菜单包含的按钮
+  // 通用字段
+  is_delete  Int       @default(0)
+  createtime DateTime  @default(now())
+  updatetime DateTime  @updatedAt
+  creator    String?   @db.Char(36)
+  updater    String?   @db.Char(36)
+
+  @@unique([value, is_delete])
+  @@index([parent_id])
+}
+
+model buttons {
+  id         String   @id @default(cuid())
+  name       String   @db.VarChar(50) // 按钮名称
+  value      String   @db.VarChar(50) // 按钮值
+  code       String?  @db.VarChar(50) // 按钮标识符（如：add, edit, delete）
+  order      Int      @default(0) // 排序
+  // 关联关系
+  menu_id    String // 所属菜单
+  menu       menu     @relation(fields: [menu_id], references: [id])
+  roles      roles[]  @relation("roles_buttons") // 与角色多对多
+  // 通用字段
+  is_delete  Int      @default(0)
+  createtime DateTime @default(now())
+  updatetime DateTime @updatedAt
+  creator    String?  @db.Char(36)
+  updater    String?  @db.Char(36)
+
+  @@unique([code, menu_id, is_delete])
+  @@index([menu_id]) // 添加索引提高查询性能
+}
+
+model dict {
+  id         String    @id @default(cuid())
+  name       String    @db.VarChar(50) // 字典名称
+  name_en    String?   @db.VarChar(50) // 英文名称
+  code       String    @db.VarChar(50) // 字典编码
+  value      String    @db.VarChar(50) // 字典值
+  label      String    @db.VarChar(50) // 字典标签(中文)
+  label_en   String?   @db.VarChar(50) // 字典标签(英文)
+  type       String?   @db.VarChar(20) // 字典类型：string/number/boolean/date等
+  order      Int       @default(0) // 排序
+  status     Int       @default(1) // 状态：0-禁用 1-启用
+  parent_id  String? // 父级ID
+  remark     String?   @db.VarChar(255) // 备注说明(中文)
+  remark_en  String?   @db.VarChar(255) // 备注说明(英文)
+  color      String?   @db.VarChar(20) // 颜色值(如：#FF0000)
+  css_class  String?   @db.VarChar(100) // 样式属性
+  list_class String?   @db.VarChar(100) // 表格回显样式
+  is_default Boolean   @default(false) // 是否默认
+  extra_data Json? // 额外数据，灵活存储
+  valid_from DateTime? @db.Timestamp // 生效时间
+  valid_to   DateTime? @db.Timestamp // 失效时间
+
+  // 通用字段
+  is_delete  Int      @default(0)
+  createtime DateTime @default(now())
+  updatetime DateTime @updatedAt
+  creator    String?  @db.Char(36)
+  updater    String?  @db.Char(36)
+
+  // 关联关系
+  parent   dict?  @relation("dict_tree", fields: [parent_id], references: [id], onDelete: SetNull)
+  children dict[] @relation("dict_tree")
+
+  @@unique([code, value, is_delete])
+  @@index([parent_id])
+  @@index([code, status])
+}
+
+model post {
+  id          String    @id @default(cuid())
+  title       String    @db.VarChar(100)
+  content     String
+  // 关联关系
+  user_id     String
+  users       users     @relation(fields: [user_id], references: [id])
+  category_id String?
+  category    category? @relation(fields: [category_id], references: [id])
+  // 通用字段
+  is_delete   Int       @default(0)
+  createtime  DateTime  @default(now())
+  updatetime  DateTime  @updatedAt
+  creator     String?   @db.Char(36)
+  updater     String?   @db.Char(36)
+
+  @@index([category_id], map: "post_category_id_fkey")
+  @@index([user_id], map: "post_user_id_fkey")
+}
+
+model category {
+  id         String   @id @default(cuid())
+  name       String   @db.VarChar(64)
+  // 通用字段
+  is_delete  Int      @default(0)
+  createtime DateTime @default(now())
+  updatetime DateTime @updatedAt
+  creator    String?  @db.Char(36)
+  updater    String?  @db.Char(36)
+  post       post[] // 反向关联
+
+  @@unique([name, is_delete])
+}
+
+// 通用字段参考
+/// id          Int      @id @default(autoincrement())
+/// is_delete   Int      @default(0)
+/// createtime  DateTime @default(now())
+/// updatetime  DateTime @updatedAt
+/// creator     String?  @db.Char(36)
+/// updater     String?  @db.Char(36)
+/// creator     users?   @relation("EntityCreatedBy", fields: [creator], references: [id])
+/// updater     users?   @relation("EntityUpdatedBy", fields: [updater], references: [id])
