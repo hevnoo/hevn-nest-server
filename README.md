@@ -26,22 +26,65 @@
 
 [Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
 
+## Prerequisites
+
+```bash
+# Required
+Node.js (>= 16.x)
+MySQL (>= 8.0)
+pnpm (>= 8.x)
+```
+
+## Environment Setup
+
+1. Create a `.env` file in the root directory with the following variables:
+
+```env
+# Database
+DATABASE_URL="mysql://user:password@localhost:3306/your_database"
+
+# App
+PORT=3000
+NODE_ENV=development
+
+# JWT (if using authentication)
+JWT_SECRET=your_jwt_secret
+JWT_EXPIRES_IN=24h
+```
+
 ## Project setup
 
 ```bash
 $ pnpm install
 ```
 
-## Sql setup
+## Database Setup and Prisma
 
 ```bash
+# Generate Prisma Client
+$ npx prisma generate
+
+# Create a new migration
+$ npx prisma migrate dev --name init
+
+# Reset database (careful in production!)
+$ npx prisma migrate reset
+
+# Open Prisma Studio
+$ npx prisma studio
+
 # synchronize database model
 $ npx prisma db push
 
 # Initialized data
 $ npx prisma db seed
-
 ```
+
+### Prisma Schema Location
+The Prisma schema file is located at `./prisma/schema.prisma`
+
+### Database Migrations
+All migrations are stored in `./prisma/migrations`
 
 ## Compile and run the project
 
@@ -108,3 +151,51 @@ Nest is an MIT-licensed open source project. It can grow thanks to the sponsors 
 ## License
 
 Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+
+## API Documentation
+
+The API documentation is available at:
+- Swagger UI: `http://localhost:3000/api`
+- OpenAPI JSON: `http://localhost:3000/api-json`
+
+## Project Structure
+
+```
+src/
+├── config/         # Configuration files
+├── controllers/    # Route controllers
+├── dto/           # Data Transfer Objects
+├── entities/      # Database entities
+├── guards/        # Authentication guards
+├── interfaces/    # TypeScript interfaces
+├── middlewares/   # Custom middlewares
+├── modules/       # Feature modules
+├── services/      # Business logic
+└── main.ts        # Application entry point
+```
+
+## Common Commands
+
+```bash
+# Generate a new resource
+$ nest generate resource [name]
+
+# Generate a controller
+$ nest generate controller [name]
+
+# Generate a service
+$ nest generate service [name]
+
+# Generate a module
+$ nest generate module [name]
+```
+
+## Error Handling
+
+The application uses a global error handling system. Common HTTP exceptions can be thrown using NestJS's built-in exceptions:
+
+```typescript
+throw new UnauthorizedException('Invalid credentials');
+throw new NotFoundException('Resource not found');
+throw new BadRequestException('Invalid input');
+```
