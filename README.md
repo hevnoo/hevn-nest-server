@@ -32,6 +32,17 @@
 $ pnpm install
 ```
 
+## Sql setup
+
+```bash
+# synchronize database model
+$ npx prisma db push
+
+# Initialized data
+$ npx prisma db seed
+
+```
+
 ## Compile and run the project
 
 ```bash
