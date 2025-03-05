@@ -18,7 +18,7 @@ import {
 export class GeneralService {
   constructor(protected prisma: PrismaService) {}
 
-  // 添加权限检查方法
+  // 添加权限检查方法，非管理员账户不能修改数据
   private async checkUserPermission(
     model: string,
     action: 'read' | 'write',

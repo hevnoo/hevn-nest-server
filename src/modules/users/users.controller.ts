@@ -11,7 +11,7 @@ import {
 import { UsersService } from './users.service';
 import { Public } from '@/common/decorators/public.decorator';
 
-@Controller('api/users123')
+@Controller('api/users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
@@ -29,7 +29,7 @@ export class UsersController {
     return await this.usersService.updateUser(id, payload);
   }
 
-  @Delete('delete/:id')
+  @Delete('deleteUser/:id')
   async delete(@Param('id') id: string): Promise<any> {
     return await this.usersService.delete(id);
   }

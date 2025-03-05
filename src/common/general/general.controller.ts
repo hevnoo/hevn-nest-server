@@ -11,8 +11,8 @@ import {
   Request,
 } from '@nestjs/common';
 import { GeneralService } from './general.service';
-import { Public } from '@/common/decorators/public.decorator';
 import { Model } from '../decorators/model.decorator';
+import { Public } from '@/common/decorators/public.decorator';
 import { SensitiveModelGuard } from '../guard/sensitive-model.guard';
 
 import {
@@ -26,7 +26,7 @@ import {
 
 // @Controller('api/:model') // api/general
 @Controller('api')
-@UseGuards(SensitiveModelGuard) // 添加黑名单限制的路由守卫
+// @UseGuards(SensitiveModelGuard) // 添加黑名单限制的路由守卫
 export class GeneralController {
   constructor(private readonly service: GeneralService) {}
 
