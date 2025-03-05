@@ -1,5 +1,6 @@
 import {
   Controller,
+  UseGuards,
   Get,
   Post,
   Body,
@@ -12,6 +13,8 @@ import {
 import { GeneralService } from './general.service';
 import { Public } from '@/common/decorators/public.decorator';
 import { Model } from '../decorators/model.decorator';
+import { SensitiveModelGuard } from '../guard/sensitive-model.guard';
+
 import {
   BaseResponse,
   QueryParams,
@@ -23,6 +26,7 @@ import {
 
 // @Controller('api/:model') // api/general
 @Controller('api')
+@UseGuards(SensitiveModelGuard) // 添加黑名单限制的路由守卫
 export class GeneralController {
   constructor(private readonly service: GeneralService) {}
 

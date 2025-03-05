@@ -11,12 +11,12 @@ import {
 import { RolesService } from './roles.service';
 import { Public } from '@/common/decorators/public.decorator';
 
-@Controller('api/roles123')
+@Controller('api/roles')
 export class RolesController {
   constructor(private readonly service: RolesService) {}
 
   // @Public()
-  @Get('getData')
+  @Get('getList')
   async getData(@Query() payload): Promise<any[]> {
     return await this.service.getData(payload);
   }
