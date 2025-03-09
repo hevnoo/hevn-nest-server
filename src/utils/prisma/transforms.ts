@@ -41,7 +41,8 @@ export const formatRelations = (payload: any, isCreate = false): any => {
     // 处理数组类型的值
     if (Array.isArray(value)) {
       if (value.length === 0) {
-        data[key] = { set: [] };
+        // 创建时空数组使用 connect，而不是 set
+        data[key] = isCreate ? { connect: [] } : { set: [] };
       } else if (typeof value[0] === 'number' || typeof value[0] === 'string') {
         data[key] = {
           [isCreate ? 'connect' : 'set']: value.map((id) => ({
@@ -76,4 +77,30 @@ export const formatRelations = (payload: any, isCreate = false): any => {
   });
 
   return data;
+};
+
+// 将bigint类型转换为number类型，js无法直接将bigint进行转换JSON
+export const transformBigIntToNumber = (data: any): any => {
+  // const biginitList = ['deletetime']; // bigint类型的字段列表，将bigint类型的数据转成number.返回客户端
+  if (data === null || data === undefined) return data;
+  if (typeof data !== 'object') return data;
+
+  if (Array.isArray(data)) {
+    return data.map((item) => transformBigIntToNumber(item));
+  }
+
+  const transformed = { ...data };
+  for (const key in transformed) {
+    if (typeof transformed[key] === 'bigint') {
+      transformed[key] = Number(transformed[key]);
+    } else if (
+      // console.log('transformed[key]', key, transformed[key]),
+      typeof transformed[key] === 'object' &&
+      transformed[key] !== null &&
+      !(transformed[key] instanceof Date)
+    ) {
+      transformed[key] = transformBigIntToNumber(transformed[key]);
+    }
+  }
+  return transformed;
 };

@@ -60,13 +60,14 @@ export class GeneralController {
   // body参数支持对象或数组对象：
   // 对象：{ id: 1, name: "test", menu: [1, 2], include: ["menu"] }
   // 数组：[{ id: 1, name: "test", menu: [1, 2], include: ["menu"] }, { id: 2, name: "test2", menu: [1, 2], include: ["menu"] }]
-  @Put(':model/update')
+  @Put(':model/update/:id?')
   async update(
     @Model() model: string,
     @Body() body: UpdateParams,
     @Request() req,
+    @Param('id') paramId?: string | number,
   ): Promise<BaseResponse> {
-    return await this.service.update(model, body, req.user);
+    return await this.service.update(model, body, req.user, paramId);
   }
 
   // 软删除

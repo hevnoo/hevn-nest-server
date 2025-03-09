@@ -3,6 +3,7 @@ import * as fs from 'fs-extra';
 import * as path from 'path';
 // npm install fs-extra @types/fs-extra
 import * as crypto from 'crypto';
+import { BASE_URL } from '@/config';
 
 @Injectable()
 export class UploadService {
@@ -121,6 +122,7 @@ export class UploadService {
             code: 200,
             msg: '文件已存在',
             url: `/uploads/${f}`,
+            fileUrl: `${BASE_URL}/uploads/${f}`,
             fileName: f,
             originalName: file.originalname,
             size: file.size,
@@ -140,6 +142,7 @@ export class UploadService {
         code: 200,
         msg: '文件上传成功',
         url: `/uploads/${fileName}`,
+        fileUrl: `${BASE_URL}/uploads/${fileName}`,
         fileName: fileName,
         originalName: file.originalname,
         size: file.size,

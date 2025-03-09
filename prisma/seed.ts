@@ -44,10 +44,10 @@ async function main() {
   for (const role of roleTypes) {
     await prisma.dict.upsert({
       where: {
-        code_value_is_delete: {
+        code_value_deletetime: {
           code: 'role_type',
           value: role.value,
-          is_delete: 0,
+          deletetime: BigInt(0),
         },
       },
       update: {},
@@ -79,10 +79,10 @@ async function main() {
   for (const btn of buttonTypes) {
     await prisma.dict.upsert({
       where: {
-        code_value_is_delete: {
+        code_value_deletetime: {
           code: 'button_type',
           value: btn.value,
-          is_delete: 0,
+          deletetime: BigInt(0),
         },
       },
       update: {},
@@ -187,10 +187,10 @@ async function main() {
   for (const menu of menuDict) {
     await prisma.dict.upsert({
       where: {
-        code_value_is_delete: {
+        code_value_deletetime: {
           code: 'menu_type',
           value: menu.value,
-          is_delete: 0,
+          deletetime: BigInt(0),
         },
       },
       update: {},
@@ -221,15 +221,15 @@ async function main() {
 
   // 4. 基于角色字典创建实际的角色数据
   const roleDictData = await prisma.dict.findMany({
-    where: { code: 'role_type', is_delete: 0 },
+    where: { code: 'role_type', deletetime: BigInt(0) },
   });
 
   for (const role of roleDictData) {
     await prisma.roles.upsert({
       where: {
-        value_is_delete: {
+        value_deletetime: {
           value: role.value,
-          is_delete: 0,
+          deletetime: BigInt(0),
         },
       },
       update: {},
@@ -243,27 +243,27 @@ async function main() {
 
   // 5. 基于字典创建菜单
   const menuDictData: any = await prisma.dict.findMany({
-    where: { code: 'menu_type', is_delete: 0 },
+    where: { code: 'menu_type', deletetime: BigInt(0) },
   });
 
   const buttonDictData: any = await prisma.dict.findMany({
-    where: { code: 'button_type', is_delete: 0 },
+    where: { code: 'button_type', deletetime: BigInt(0) },
   });
   const baseButtons = buttonDictData.map((btn) => ({
     name: btn.label,
     value: btn.value,
     order: btn.order,
-    is_delete: 0,
+    deletetime: BigInt(0),
   }));
 
   // 先创建所有顶级菜单
   for (const menu of menuDictData.filter((m) => !m.extra_data.parent_value)) {
     await prisma.menu.upsert({
       where: {
-        value_is_delete: {
+        value_deletetime: {
           value: menu.value,
           // parent_id: null, // 修改为 null
-          is_delete: 0,
+          deletetime: BigInt(0),
         },
       },
       update: {},
@@ -278,14 +278,13 @@ async function main() {
         icon: menu.extra_data.icon,
         parent_id: null, // 修改为 null
         order: menu.order,
-        is_delete: 0,
       },
     });
   }
 
   // 查询所有已创建的菜单
   const parentMenus = await prisma.menu.findMany({
-    where: { is_delete: 0 },
+    where: { deletetime: BigInt(0) },
   });
 
   // 创建子菜单
@@ -304,10 +303,10 @@ async function main() {
 
     await prisma.menu.upsert({
       where: {
-        value_is_delete: {
+        value_deletetime: {
           value: menu.value,
           // parent_id: parentMenu?.id ?? null, // 修改为 null
-          is_delete: 0,
+          deletetime: BigInt(0),
         },
       },
       update: {},
@@ -322,7 +321,6 @@ async function main() {
         icon: menu.extra_data.icon,
         parent_id: parentMenu?.id ?? null, // 修改为 null
         order: menu.order,
-        is_delete: 0,
         // 只给子菜单添加按钮
         ...(parentMenu
           ? {
@@ -345,10 +343,10 @@ async function main() {
 
   //   await prisma.menu.upsert({
   //     where: {
-  //       value_parent_id_is_delete: {
+  //       value_parent_id_deletetime: {
   //         value: menu.value,
   //         parent_id: parentMenu.id,
-  //         is_delete: 0,
+  //         deletetime: BigInt(0),
   //       },
   //     },
   //     update: {},
@@ -362,7 +360,7 @@ async function main() {
   //       icon: menu.extra_data.icon,
   //       parent_id: parentMenu.id,
   //       order: menu.order,
-  //       is_delete: 0,
+  //       deletetime: BigInt(0),
   //       buttons: {
   //         createMany: {
   //           data: baseButtons,
@@ -385,7 +383,7 @@ main()
 /* 
   使用 upsert 操作，它的工作原理是：
   首先根据 where 条件查找记录：
-  where: { value_is_delete: { value: 'super_admin', is_delete: 0 } },
+  where: { value_deletetime: { value: 'super_admin', deletetime: BigInt(0) } },
   如果找到匹配的记录，则执行 update 操作，更新记录的值。
   如果未找到匹配的记录，则执行 create 操作，创建新的记录。
   */

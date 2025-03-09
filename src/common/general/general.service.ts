@@ -13,6 +13,7 @@ import {
   DeleteParams,
   HardDeleteParams,
 } from './general.interface';
+import * as bcryptjs from 'bcryptjs';
 
 @Injectable()
 export class GeneralService {
@@ -79,10 +80,28 @@ export class GeneralService {
       } = params;
 
       // 构建基础查询条件
-      const baseWhere = { is_delete: 0, ...where };
-      if (rest.name) {
-        baseWhere['name'] = { contains: rest.name };
-      }
+      // 构建基础查询条件，并处理类型转换
+      const baseWhere = {
+        deletetime: BigInt(0),
+        ...Object.entries(where).reduce((acc, [key, value]) => {
+          // 处理布尔值
+          if (typeof value === 'string' && ['true', 'false'].includes(value)) {
+            acc[key] = value === 'true';
+          }
+          // 处理数字
+          else if (typeof value === 'string' && !isNaN(Number(value))) {
+            acc[key] = Number(value);
+          }
+          // 其他类型保持不变
+          else {
+            acc[key] = value;
+          }
+          return acc;
+        }, {}),
+      };
+      // if (rest.name) {
+      //   baseWhere['name'] = { contains: rest.name };
+      // }
 
       // 构建查询选项
       const options: any = {
@@ -139,16 +158,20 @@ export class GeneralService {
       // 处理单个对象创建
       if (!Array.isArray(payload)) {
         const { include, ...rest } = payload;
+
+        // 支持创建用户时的密码加密
+        if (model === 'users' && rest?.password) {
+          rest.password = await bcryptjs.hash(rest.password, 10); // 加密
+        }
+
         data = await this.prisma[model].create({
           data: formatRelations(rest, true),
           include: parseInclude(include),
         });
 
         return { code: 200, msg: '创建成功', data };
-      }
-
-      // 处理批量创建
-      else {
+      } else {
+        // 处理批量创建
         if (!payload.length) {
           return { code: 400, msg: '创建数据不能为空', data: null };
         }
@@ -181,6 +204,7 @@ export class GeneralService {
     model: string,
     payload: UpdateParams,
     user?: any,
+    paramId: string | number = '',
   ): Promise<BaseResponse> {
     // 权限检查
     const hasPermission = await this.checkUserPermission(model, 'write', user);
@@ -192,22 +216,25 @@ export class GeneralService {
 
       // 处理单个对象更新
       if (!Array.isArray(payload)) {
-        if (!payload.id) {
+        if (!payload.id && !paramId) {
           return { code: 400, msg: 'id不能为空', data: null };
         }
-
         const { id, include, ...rest } = payload;
+
+        // 支持创建用户时的密码加密
+        if (model === 'users' && rest?.password) {
+          rest.password = await bcryptjs.hash(rest.password, 10); // 加密
+        }
+
         data = await this.prisma[model].update({
-          where: { id },
+          where: { id: paramId || id },
           data: formatRelations(rest, false),
           include: parseInclude(include),
         });
 
         return { code: 200, msg: '更新成功', data };
-      }
-
-      // 处理批量更新
-      else {
+      } else {
+        // 处理批量更新
         // 验证每个对象都有id
         if (payload.some((item) => !item.id)) {
           return {
@@ -256,52 +283,80 @@ export class GeneralService {
       let data;
       let result = { code: 400, msg: '参数错误', data: null };
 
-      if (typeof body === 'string' || typeof body === 'number') {
-        data = await this.prisma[model].update({
-          where: { id: body },
-          data: { is_delete: 1 },
-        });
-        result = { code: 200, msg: '删除成功', data };
-      } else if (Array.isArray(body)) {
-        if (body.length === 0) return result;
+      // 单个删除处理
+      if (
+        typeof body === 'string' ||
+        typeof body === 'number' ||
+        (typeof body === 'object' && 'id' in body)
+      ) {
+        const id = typeof body === 'object' ? body.id : body;
 
-        // 处理数组对象格式 [{ id: 1 }, { id: 2 }]
-        if (typeof body[0] === 'object' && 'id' in body[0]) {
-          const ids = body.map((item) => item.id);
-          data = await this.prisma[model].updateMany({
-            where: { id: { in: ids }, is_delete: 0 },
-            data: { is_delete: 1 },
+        // 使用事务确保原子性
+        data = await this.prisma.$transaction(async (tx) => {
+          // 查询并锁定记录
+          const record = await tx[model].findFirst({
+            where: {
+              id,
+              deletetime: BigInt(0),
+            },
+            select: { id: true },
           });
-          result = { code: 200, msg: '批量删除成功', data };
-        } else {
-          // 处理ID数组的情况
-          data = await this.prisma[model].updateMany({
-            where: { id: { in: body }, is_delete: 0 },
-            data: { is_delete: 1 },
+
+          if (!record) {
+            throw new Error('记录不存在或已删除');
+          }
+          // 执行软删除
+          return await tx[model].update({
+            where: { id },
+            data: {
+              deletetime: new Date().getTime(),
+            },
           });
-          result = { code: 200, msg: '批量删除成功', data };
-        }
-      } else if (
-        typeof body === 'object' &&
-        'id' in body &&
-        (typeof body.id === 'string' || typeof body.id === 'number')
-      ) {
-        data = await this.prisma[model].update({
-          where: { id: body.id },
-          data: { is_delete: 1 },
         });
+
         result = { code: 200, msg: '删除成功', data };
-      } else if (
-        typeof body === 'object' &&
-        'ids' in body &&
-        Array.isArray(body.ids)
+      }
+      // 批量删除处理
+      else if (
+        Array.isArray(body) ||
+        (typeof body === 'object' && 'ids' in body)
       ) {
-        data = await this.prisma[model].updateMany({
-          where: { id: { in: body.ids }, is_delete: 0 },
-          data: { is_delete: 1 },
+        const ids = Array.isArray(body)
+          ? typeof body[0] === 'object'
+            ? body.map((item) => item.id)
+            : body
+          : body.ids;
+
+        // 使用事务处理批量删除
+        data = await this.prisma.$transaction(async (tx) => {
+          // 查询并锁定所有记录
+          const records = await tx[model].findMany({
+            where: {
+              id: { in: ids },
+              deletetime: BigInt(0),
+            },
+            select: { id: true },
+          });
+
+          if (!records.length) {
+            throw new Error('没有找到可删除的记录');
+          }
+
+          // 执行批量软删除
+          return await tx[model].updateMany({
+            where: {
+              id: { in: records.map((r) => r.id) },
+              deletetime: BigInt(0),
+            },
+            data: {
+              deletetime: new Date().getTime(),
+            },
+          });
         });
+
         result = { code: 200, msg: '批量删除成功', data };
       }
+
       return result;
     } catch (e) {
       return handlePrismaError(e);
@@ -382,7 +437,7 @@ export class GeneralService {
 
       // 构建查询条件
       const whereConditions: any = {
-        is_delete: 0,
+        deletetime: BigInt(0),
       };
 
       // 处理查询参数

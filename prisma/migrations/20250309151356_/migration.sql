@@ -7,18 +7,19 @@ CREATE TABLE `users` (
     `phone` VARCHAR(15) NULL,
     `openid` VARCHAR(36) NULL,
     `nickname` VARCHAR(20) NULL,
-    `head_img` VARCHAR(255) NULL,
-    `status` VARCHAR(10) NULL,
-    `is_delete` INTEGER NOT NULL DEFAULT 0,
+    `avatar` VARCHAR(255) NULL,
+    `status` BOOLEAN NULL DEFAULT true,
     `createtime` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updatetime` DATETIME(3) NOT NULL,
+    `deletetime` BIGINT NOT NULL DEFAULT 0,
     `creator` CHAR(36) NULL,
     `updater` CHAR(36) NULL,
 
-    UNIQUE INDEX `users_email_is_delete_key`(`email`, `is_delete`),
-    UNIQUE INDEX `users_openid_is_delete_key`(`openid`, `is_delete`),
-    UNIQUE INDEX `users_phone_is_delete_key`(`phone`, `is_delete`),
-    UNIQUE INDEX `users_username_is_delete_key`(`username`, `is_delete`),
+    INDEX `users_deletetime_idx`(`deletetime`),
+    UNIQUE INDEX `users_email_deletetime_key`(`email`, `deletetime`),
+    UNIQUE INDEX `users_openid_deletetime_key`(`openid`, `deletetime`),
+    UNIQUE INDEX `users_phone_deletetime_key`(`phone`, `deletetime`),
+    UNIQUE INDEX `users_username_deletetime_key`(`username`, `deletetime`),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
@@ -28,13 +29,14 @@ CREATE TABLE `roles` (
     `name` VARCHAR(36) NOT NULL,
     `value` VARCHAR(36) NOT NULL,
     `description` VARCHAR(191) NULL,
-    `is_delete` INTEGER NOT NULL DEFAULT 0,
     `createtime` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updatetime` DATETIME(3) NOT NULL,
+    `deletetime` BIGINT NOT NULL DEFAULT 0,
     `creator` CHAR(36) NULL,
     `updater` CHAR(36) NULL,
 
-    UNIQUE INDEX `roles_value_is_delete_key`(`value`, `is_delete`),
+    INDEX `roles_deletetime_idx`(`deletetime`),
+    UNIQUE INDEX `roles_value_deletetime_key`(`value`, `deletetime`),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
@@ -44,13 +46,14 @@ CREATE TABLE `permission` (
     `name` VARCHAR(36) NOT NULL,
     `value` VARCHAR(36) NOT NULL,
     `description` VARCHAR(191) NULL,
-    `is_delete` INTEGER NOT NULL DEFAULT 0,
     `createtime` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updatetime` DATETIME(3) NOT NULL,
+    `deletetime` BIGINT NOT NULL DEFAULT 0,
     `creator` CHAR(36) NULL,
     `updater` CHAR(36) NULL,
 
-    UNIQUE INDEX `permission_value_is_delete_key`(`value`, `is_delete`),
+    INDEX `permission_deletetime_idx`(`deletetime`),
+    UNIQUE INDEX `permission_value_deletetime_key`(`value`, `deletetime`),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
@@ -68,14 +71,14 @@ CREATE TABLE `menu` (
     `order` INTEGER NOT NULL DEFAULT 0,
     `hidden` BOOLEAN NOT NULL DEFAULT false,
     `parent_id` VARCHAR(191) NULL,
-    `is_delete` INTEGER NOT NULL DEFAULT 0,
     `createtime` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updatetime` DATETIME(3) NOT NULL,
+    `deletetime` BIGINT NOT NULL DEFAULT 0,
     `creator` CHAR(36) NULL,
     `updater` CHAR(36) NULL,
 
-    INDEX `menu_parent_id_idx`(`parent_id`),
-    UNIQUE INDEX `menu_value_is_delete_key`(`value`, `is_delete`),
+    INDEX `menu_parent_id_deletetime_idx`(`parent_id`, `deletetime`),
+    UNIQUE INDEX `menu_value_deletetime_key`(`value`, `deletetime`),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
@@ -87,14 +90,14 @@ CREATE TABLE `buttons` (
     `code` VARCHAR(50) NULL,
     `order` INTEGER NOT NULL DEFAULT 0,
     `menu_id` VARCHAR(191) NOT NULL,
-    `is_delete` INTEGER NOT NULL DEFAULT 0,
     `createtime` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updatetime` DATETIME(3) NOT NULL,
+    `deletetime` BIGINT NOT NULL DEFAULT 0,
     `creator` CHAR(36) NULL,
     `updater` CHAR(36) NULL,
 
-    INDEX `buttons_menu_id_idx`(`menu_id`),
-    UNIQUE INDEX `buttons_code_menu_id_is_delete_key`(`code`, `menu_id`, `is_delete`),
+    INDEX `buttons_menu_id_deletetime_idx`(`menu_id`, `deletetime`),
+    UNIQUE INDEX `buttons_code_menu_id_deletetime_key`(`code`, `menu_id`, `deletetime`),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
@@ -120,15 +123,15 @@ CREATE TABLE `dict` (
     `extra_data` JSON NULL,
     `valid_from` TIMESTAMP NULL,
     `valid_to` TIMESTAMP NULL,
-    `is_delete` INTEGER NOT NULL DEFAULT 0,
     `createtime` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updatetime` DATETIME(3) NOT NULL,
+    `deletetime` BIGINT NOT NULL DEFAULT 0,
     `creator` CHAR(36) NULL,
     `updater` CHAR(36) NULL,
 
-    INDEX `dict_parent_id_idx`(`parent_id`),
     INDEX `dict_code_status_idx`(`code`, `status`),
-    UNIQUE INDEX `dict_code_value_is_delete_key`(`code`, `value`, `is_delete`),
+    INDEX `dict_parent_id_deletetime_idx`(`parent_id`, `deletetime`),
+    UNIQUE INDEX `dict_code_value_deletetime_key`(`code`, `value`, `deletetime`),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
@@ -139,14 +142,15 @@ CREATE TABLE `post` (
     `content` VARCHAR(191) NOT NULL,
     `user_id` VARCHAR(191) NOT NULL,
     `category_id` VARCHAR(191) NULL,
-    `is_delete` INTEGER NOT NULL DEFAULT 0,
     `createtime` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updatetime` DATETIME(3) NOT NULL,
+    `deletetime` BIGINT NOT NULL DEFAULT 0,
     `creator` CHAR(36) NULL,
     `updater` CHAR(36) NULL,
 
     INDEX `post_category_id_fkey`(`category_id`),
     INDEX `post_user_id_fkey`(`user_id`),
+    UNIQUE INDEX `post_title_user_id_deletetime_key`(`title`, `user_id`, `deletetime`),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
@@ -154,13 +158,14 @@ CREATE TABLE `post` (
 CREATE TABLE `category` (
     `id` VARCHAR(191) NOT NULL,
     `name` VARCHAR(64) NOT NULL,
-    `is_delete` INTEGER NOT NULL DEFAULT 0,
     `createtime` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updatetime` DATETIME(3) NOT NULL,
+    `deletetime` BIGINT NOT NULL DEFAULT 0,
     `creator` CHAR(36) NULL,
     `updater` CHAR(36) NULL,
 
-    UNIQUE INDEX `category_name_is_delete_key`(`name`, `is_delete`),
+    INDEX `category_deletetime_idx`(`deletetime`),
+    UNIQUE INDEX `category_name_deletetime_key`(`name`, `deletetime`),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 

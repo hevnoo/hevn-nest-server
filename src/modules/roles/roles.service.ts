@@ -10,7 +10,7 @@ export class RolesService {
 
   async getData(params: any): Promise<any | null> {
     const { page = 1, pageSize = 10, name } = params;
-    const where = { is_delete: 0 };
+    const where = { deletetime: BigInt(0) };
     if (name) {
       where['name'] = { contains: name };
     }
@@ -101,9 +101,9 @@ export class RolesService {
             id: {
               in: ids,
             },
-            is_delete: 0,
+            deletetime: BigInt(0),
           },
-          data: { is_delete: 1 },
+          data: { deletetime: new Date().getTime() },
         });
         return {
           code: 200,
@@ -113,7 +113,7 @@ export class RolesService {
       }
       const data = await this.prisma[model].update({
         where: { id },
-        data: { is_delete: 1 },
+        data: { deletetime: new Date().getTime() },
       });
       return { code: 200, msg: '删除成功', data };
     } catch (e) {

@@ -20,7 +20,7 @@ export class AuthService {
           { email: identifier },
           { phone: identifier },
         ],
-        is_delete: 0,
+        deletetime: BigInt(0),
       },
     });
 
@@ -36,12 +36,12 @@ export class AuthService {
       const userInfo = await this.prismaService.users.findUnique({
         where: {
           id,
-          is_delete: 0,
+          deletetime: BigInt(0),
         },
         // where: {
-        //   username_is_delete: {
+        //   username_deletetime: {
         //     username,
-        //     is_delete: 0,
+        //     deletetime: BigInt(0),
         //   },
         // },
         select: {
@@ -49,7 +49,7 @@ export class AuthService {
           username: true,
           email: true,
           nickname: true,
-          head_img: true,
+          avatar: true,
           roles: {
             select: {
               id: true,
@@ -79,23 +79,25 @@ export class AuthService {
   }
 
   async register(payload: any): Promise<any> {
-    const { username, password, email, phone, nickname } = payload;
+    const { username, password, email, phone, nickname, ...rest } = payload;
     try {
       let where: any = {};
       if (username) {
-        where['username_is_delete'] = {
+        where['username_deletetime'] = {
           username,
-          is_delete: 0,
+          deletetime: BigInt(0),
         };
-      } else if (email) {
-        where['email_is_delete'] = {
+      }
+      if (email) {
+        where['email_deletetime'] = {
           email,
-          is_delete: 0,
+          deletetime: BigInt(0),
         };
-      } else if (phone) {
-        where['phone_is_delete'] = {
+      }
+      if (phone) {
+        where['phone_deletetime'] = {
           phone,
-          is_delete: 0,
+          deletetime: BigInt(0),
         };
       }
       if (!Object.keys(where).length) {
@@ -119,31 +121,35 @@ export class AuthService {
         email,
         nickname,
       };
-      let rolesData = null;
-      if (username === 'admin') {
-        rolesData = await this.prismaService.roles.findMany({
-          where: {
-            OR: [{ value: 'admin' }, { value: 'editor' }],
-            is_delete: 0,
-          },
-        });
-      } else {
-        rolesData = await this.prismaService.roles.findFirst({
-          where: {
-            value: 'user',
-            is_delete: 0,
-          },
-        });
-      }
-      if (Array.isArray(rolesData)) {
-        createData['roles'] = {
-          connect: rolesData.map((item) => ({ id: item.id })),
-        };
-      } else if (rolesData) {
-        createData['roles'] = {
-          connect: [{ id: rolesData.id }], // 多对多roles，创建时关联角色
-        };
-      }
+      const setRalations = async () => {
+        let rolesData = null;
+        if (username === 'admin') {
+          rolesData = await this.prismaService.roles.findMany({
+            where: {
+              OR: [{ value: 'admin' }, { value: 'editor' }],
+              deletetime: BigInt(0),
+            },
+          });
+        } else {
+          rolesData = await this.prismaService.roles.findFirst({
+            where: {
+              value: 'user',
+              deletetime: BigInt(0),
+            },
+          });
+        }
+        if (Array.isArray(rolesData)) {
+          createData['roles'] = {
+            connect: rolesData.map((item) => ({ id: item.id })),
+          };
+        } else if (rolesData) {
+          createData['roles'] = {
+            connect: [{ id: rolesData.id }], // 多对多roles，创建时关联角色
+          };
+        }
+      };
+      await setRalations();
+
       const data = await this.prismaService.users.create({
         data: createData,
         include: {

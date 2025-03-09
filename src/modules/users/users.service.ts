@@ -10,7 +10,7 @@ export class UsersService {
 
   async getUserList(params: any): Promise<any | null> {
     const { page = 1, pageSize = 10, name } = params;
-    const where = { is_delete: 0 };
+    const where = { deletetime: BigInt(0) };
     if (name) {
       where['username'] = { contains: name };
     }
@@ -51,9 +51,9 @@ export class UsersService {
       }
       // const myUserInfo = await prisma.users.findUnique({
       //   where: {
-      //     username_is_delete: {
+      //     username_deletetime: {
       //       username: req.auth.username,
-      //       is_delete: 0
+      //       deletetime: BigInt(0)
       //     }
       //   }
       // })
@@ -89,7 +89,7 @@ export class UsersService {
       }
       const data = await this.prisma[model].update({
         where: { id },
-        data: { is_delete: 1 },
+        data: { deletetime: new Date().getTime() },
       });
       return { code: 200, msg: '删除成功', data };
     } catch (e) {
@@ -107,9 +107,9 @@ export class UsersService {
           id: {
             in: ids,
           },
-          is_delete: 0,
+          deletetime: BigInt(0),
         },
-        data: { is_delete: 1 },
+        data: { deletetime: new Date().getTime() },
       });
       return {
         code: 200,

@@ -15,7 +15,7 @@ async function bootstrap() {
 
   // 使用全局管道
   app.useGlobalPipes(new ValidationPipe());
-  // 使用格式化响应体 全局拦截器
+  // 响应体格式化全局拦截器
   app.useGlobalInterceptors(new TransformInterceptor());
   // 使用全局异常过滤器
   app.useGlobalFilters(new HttpExceptionFilter());

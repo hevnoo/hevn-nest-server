@@ -36,7 +36,7 @@ export class MenuService {
       } = params;
 
       // 构建基础查询条件
-      const baseWhere = { is_delete: 0, ...where };
+      const baseWhere = { deletetime: BigInt(0), ...where };
       if (rest.name) {
         baseWhere['name'] = { contains: rest.name };
       }
@@ -136,9 +136,9 @@ export class MenuService {
             id: {
               in: ids,
             },
-            is_delete: 0,
+            deletetime: BigInt(0),
           },
-          data: { is_delete: 1 },
+          data: { deletetime: new Date().getTime() },
         });
         return {
           code: 200,
@@ -148,7 +148,7 @@ export class MenuService {
       }
       const data = await this.prisma[model].update({
         where: { id },
-        data: { is_delete: 1 },
+        data: { deletetime: new Date().getTime() },
       });
       return { code: 200, msg: '删除成功', data };
     } catch (e) {

@@ -15,22 +15,23 @@ model users {
   phone      String?  @db.VarChar(15)
   openid     String?  @db.VarChar(36) // 微信openid
   nickname   String?  @db.VarChar(20)
-  head_img   String?  @db.VarChar(255)
-  status     String?  @db.VarChar(10)
+  avatar     String?  @db.VarChar(255)
+  status     Boolean? @default(true)
   // 通用字段
-  is_delete  Int      @default(0)
   createtime DateTime @default(now())
   updatetime DateTime @updatedAt
+  deletetime BigInt   @default(0) // 软删除时间，未删除的记录：deletetime = 0， deletetime = 删除时的时间戳（毫秒）
   creator    String?  @db.Char(36)
   updater    String?  @db.Char(36)
 
   roles roles[] @relation("users_roles") // 反向关联，表示多对多关系，虚拟字段
   post  post[] //反向关联
 
-  @@unique([email, is_delete]) // 复合唯一索引
-  @@unique([openid, is_delete])
-  @@unique([phone, is_delete])
-  @@unique([username, is_delete])
+  @@unique([email, deletetime]) // 复合唯一索引
+  @@unique([openid, deletetime])
+  @@unique([phone, deletetime])
+  @@unique([username, deletetime])
+  @@index([deletetime]) // 添加单独索引提高查询性能
 }
 
 // 角色模型控制permission、menu、button等权限
@@ -45,13 +46,14 @@ model roles {
   menu        menu[]       @relation("roles_menu") // 与菜单多对多
   buttons     buttons[]    @relation("roles_buttons") // 与按钮多对多
   // 通用字段
-  is_delete   Int          @default(0)
   createtime  DateTime     @default(now())
   updatetime  DateTime     @updatedAt
+  deletetime  BigInt       @default(0) // 添加软删除时间
   creator     String?      @db.Char(36)
   updater     String?      @db.Char(36)
 
-  @@unique([value, is_delete])
+  @@unique([value, deletetime])
+  @@index([deletetime]) // 添加单独索引提高查询性能
 }
 
 model permission {
@@ -61,13 +63,14 @@ model permission {
   description String? // 权限描述
   roles       roles[]  @relation("roles_permission") // 多对多关系
   // 通用字段
-  is_delete   Int      @default(0)
   createtime  DateTime @default(now())
   updatetime  DateTime @updatedAt
+  deletetime  BigInt   @default(0) // 添加软删除时间
   creator     String?  @db.Char(36)
   updater     String?  @db.Char(36)
 
-  @@unique([value, is_delete])
+  @@unique([value, deletetime])
+  @@index([deletetime]) // 添加单独索引提高查询性能
 }
 
 model menu {
@@ -90,14 +93,14 @@ model menu {
   roles      roles[]   @relation("roles_menu") // 与角色多对多
   buttons    buttons[] // 菜单包含的按钮
   // 通用字段
-  is_delete  Int       @default(0)
   createtime DateTime  @default(now())
   updatetime DateTime  @updatedAt
+  deletetime BigInt    @default(0) // 添加软删除时间
   creator    String?   @db.Char(36)
   updater    String?   @db.Char(36)
 
-  @@unique([value, is_delete])
-  @@index([parent_id])
+  @@unique([value, deletetime])
+  @@index([parent_id, deletetime])
 }
 
 model buttons {
@@ -111,14 +114,14 @@ model buttons {
   menu       menu     @relation(fields: [menu_id], references: [id])
   roles      roles[]  @relation("roles_buttons") // 与角色多对多
   // 通用字段
-  is_delete  Int      @default(0)
   createtime DateTime @default(now())
   updatetime DateTime @updatedAt
+  deletetime BigInt   @default(0) // 添加软删除时间
   creator    String?  @db.Char(36)
   updater    String?  @db.Char(36)
 
-  @@unique([code, menu_id, is_delete])
-  @@index([menu_id]) // 添加索引提高查询性能
+  @@unique([code, menu_id, deletetime])
+  @@index([menu_id, deletetime]) // 添加索引提高查询性能
 }
 
 model dict {
@@ -144,9 +147,9 @@ model dict {
   valid_to   DateTime? @db.Timestamp // 失效时间
 
   // 通用字段
-  is_delete  Int      @default(0)
   createtime DateTime @default(now())
   updatetime DateTime @updatedAt
+  deletetime BigInt   @default(0) // 添加软删除时间
   creator    String?  @db.Char(36)
   updater    String?  @db.Char(36)
 
@@ -154,9 +157,9 @@ model dict {
   parent   dict?  @relation("dict_tree", fields: [parent_id], references: [id], onDelete: SetNull)
   children dict[] @relation("dict_tree")
 
-  @@unique([code, value, is_delete])
-  @@index([parent_id])
-  @@index([code, status])
+  @@unique([code, value, deletetime])
+  @@index([code, status]) // 常一起使用的可使用组合索引优化查询性能
+  @@index([parent_id, deletetime])
 }
 
 model post {
@@ -169,13 +172,14 @@ model post {
   category_id String?
   category    category? @relation(fields: [category_id], references: [id])
   // 通用字段
-  is_delete   Int       @default(0)
   createtime  DateTime  @default(now())
   updatetime  DateTime  @updatedAt
+  deletetime  BigInt    @default(0)
   creator     String?   @db.Char(36)
   updater     String?   @db.Char(36)
 
-  @@index([category_id], map: "post_category_id_fkey")
+  @@unique([title, user_id, deletetime])
+  @@index([category_id], map: "post_category_id_fkey") // 使用map为索引指定特定名称
   @@index([user_id], map: "post_user_id_fkey")
 }
 
@@ -183,21 +187,22 @@ model category {
   id         String   @id @default(cuid())
   name       String   @db.VarChar(64)
   // 通用字段
-  is_delete  Int      @default(0)
   createtime DateTime @default(now())
   updatetime DateTime @updatedAt
+  deletetime BigInt   @default(0) // 添加软删除时间
   creator    String?  @db.Char(36)
   updater    String?  @db.Char(36)
   post       post[] // 反向关联
 
-  @@unique([name, is_delete])
+  @@unique([name, deletetime])
+  @@index([deletetime])
 }
 
 // 通用字段参考
 /// id          Int      @id @default(autoincrement())
-/// is_delete   Int      @default(0)
 /// createtime  DateTime @default(now())
 /// updatetime  DateTime @updatedAt
+/// deletetime  BigInt   @default(0) // 添加软删除时间
 /// creator     String?  @db.Char(36)
 /// updater     String?  @db.Char(36)
 /// creator     users?   @relation("EntityCreatedBy", fields: [creator], references: [id])

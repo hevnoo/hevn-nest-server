@@ -1,4 +1,4 @@
-// 接口返回数据结构拦截器, 处理成功返回的数据结构
+// 响应拦截，接口返回数据结构拦截器, 处理成功返回的数据结构
 import {
   Injectable,
   NestInterceptor,
@@ -8,6 +8,7 @@ import {
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { ApiResponseDto } from '../dto/api-response.dto';
+import { transformBigIntToNumber } from '@/utils/prisma';
 
 @Injectable()
 export class TransformInterceptor<T>
@@ -19,10 +20,14 @@ export class TransformInterceptor<T>
   ): Observable<ApiResponseDto<T>> {
     return next.handle().pipe(
       map((data) => {
-        if (data instanceof ApiResponseDto) {
-          return data;
+        // 先处理 BigInt 转换
+        const transformedData = transformBigIntToNumber(data);
+
+        // 然后处理响应格式
+        if (transformedData instanceof ApiResponseDto) {
+          return transformedData;
         }
-        return new ApiResponseDto(200, '操作成功', data);
+        return new ApiResponseDto(200, '操作成功', transformedData);
       }),
     );
   }
