@@ -29,6 +29,7 @@ CREATE TABLE `roles` (
     `name` VARCHAR(36) NOT NULL,
     `value` VARCHAR(36) NOT NULL,
     `description` VARCHAR(191) NULL,
+    `order` INTEGER NOT NULL DEFAULT 0,
     `createtime` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updatetime` DATETIME(3) NOT NULL,
     `deletetime` BIGINT NOT NULL DEFAULT 0,
@@ -78,7 +79,7 @@ CREATE TABLE `menu` (
     `updater` CHAR(36) NULL,
 
     INDEX `menu_parent_id_deletetime_idx`(`parent_id`, `deletetime`),
-    UNIQUE INDEX `menu_value_deletetime_key`(`value`, `deletetime`),
+    UNIQUE INDEX `menu_value_parent_id_deletetime_key`(`value`, `parent_id`, `deletetime`),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
@@ -102,25 +103,55 @@ CREATE TABLE `buttons` (
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
-CREATE TABLE `dict` (
+CREATE TABLE `department` (
     `id` VARCHAR(191) NOT NULL,
     `name` VARCHAR(50) NOT NULL,
-    `name_en` VARCHAR(50) NULL,
     `code` VARCHAR(50) NOT NULL,
-    `value` VARCHAR(50) NOT NULL,
-    `label` VARCHAR(50) NOT NULL,
-    `label_en` VARCHAR(50) NULL,
-    `type` VARCHAR(20) NULL,
     `order` INTEGER NOT NULL DEFAULT 0,
     `status` INTEGER NOT NULL DEFAULT 1,
+    `description` VARCHAR(255) NULL,
     `parent_id` VARCHAR(191) NULL,
+    `createtime` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    `updatetime` DATETIME(3) NOT NULL,
+    `deletetime` BIGINT NOT NULL DEFAULT 0,
+    `creator` CHAR(36) NULL,
+    `updater` CHAR(36) NULL,
+
+    INDEX `department_parent_id_deletetime_idx`(`parent_id`, `deletetime`),
+    UNIQUE INDEX `department_code_deletetime_key`(`code`, `deletetime`),
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `dict_type` (
+    `id` VARCHAR(191) NOT NULL,
+    `name` VARCHAR(50) NOT NULL,
+    `value` VARCHAR(50) NOT NULL,
+    `status` BOOLEAN NOT NULL DEFAULT true,
+    `description` VARCHAR(255) NULL,
+    `createtime` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    `updatetime` DATETIME(3) NOT NULL,
+    `deletetime` BIGINT NOT NULL DEFAULT 0,
+    `creator` CHAR(36) NULL,
+    `updater` CHAR(36) NULL,
+
+    INDEX `dict_type_deletetime_idx`(`deletetime`),
+    UNIQUE INDEX `dict_type_value_deletetime_key`(`value`, `deletetime`),
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `dict` (
+    `id` VARCHAR(191) NOT NULL,
+    `dict_name` VARCHAR(50) NOT NULL,
+    `dict_value` VARCHAR(50) NOT NULL,
+    `language` VARCHAR(10) NULL,
+    `order` INTEGER NOT NULL DEFAULT 0,
+    `status` BOOLEAN NOT NULL DEFAULT true,
     `remark` VARCHAR(255) NULL,
-    `remark_en` VARCHAR(255) NULL,
     `color` VARCHAR(20) NULL,
-    `css_class` VARCHAR(100) NULL,
-    `list_class` VARCHAR(100) NULL,
     `is_default` BOOLEAN NOT NULL DEFAULT false,
-    `extra_data` JSON NULL,
+    `json_data` JSON NULL,
     `valid_from` TIMESTAMP NULL,
     `valid_to` TIMESTAMP NULL,
     `createtime` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
@@ -128,10 +159,10 @@ CREATE TABLE `dict` (
     `deletetime` BIGINT NOT NULL DEFAULT 0,
     `creator` CHAR(36) NULL,
     `updater` CHAR(36) NULL,
+    `dict_type_id` VARCHAR(50) NOT NULL,
 
-    INDEX `dict_code_status_idx`(`code`, `status`),
-    INDEX `dict_parent_id_deletetime_idx`(`parent_id`, `deletetime`),
-    UNIQUE INDEX `dict_code_value_deletetime_key`(`code`, `value`, `deletetime`),
+    INDEX `dict_deletetime_idx`(`deletetime`),
+    UNIQUE INDEX `dict_dict_value_dict_type_id_deletetime_key`(`dict_value`, `dict_type_id`, `deletetime`),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
@@ -205,6 +236,15 @@ CREATE TABLE `_roles_buttons` (
     INDEX `_roles_buttons_B_index`(`B`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
+-- CreateTable
+CREATE TABLE `_users_department` (
+    `A` VARCHAR(191) NOT NULL,
+    `B` VARCHAR(191) NOT NULL,
+
+    UNIQUE INDEX `_users_department_AB_unique`(`A`, `B`),
+    INDEX `_users_department_B_index`(`B`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
 -- AddForeignKey
 ALTER TABLE `menu` ADD CONSTRAINT `menu_parent_id_fkey` FOREIGN KEY (`parent_id`) REFERENCES `menu`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
 
@@ -212,7 +252,10 @@ ALTER TABLE `menu` ADD CONSTRAINT `menu_parent_id_fkey` FOREIGN KEY (`parent_id`
 ALTER TABLE `buttons` ADD CONSTRAINT `buttons_menu_id_fkey` FOREIGN KEY (`menu_id`) REFERENCES `menu`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `dict` ADD CONSTRAINT `dict_parent_id_fkey` FOREIGN KEY (`parent_id`) REFERENCES `dict`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+ALTER TABLE `department` ADD CONSTRAINT `department_parent_id_fkey` FOREIGN KEY (`parent_id`) REFERENCES `department`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `dict` ADD CONSTRAINT `dict_dict_type_id_fkey` FOREIGN KEY (`dict_type_id`) REFERENCES `dict_type`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE `post` ADD CONSTRAINT `post_user_id_fkey` FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
@@ -243,3 +286,9 @@ ALTER TABLE `_roles_buttons` ADD CONSTRAINT `_roles_buttons_A_fkey` FOREIGN KEY 
 
 -- AddForeignKey
 ALTER TABLE `_roles_buttons` ADD CONSTRAINT `_roles_buttons_B_fkey` FOREIGN KEY (`B`) REFERENCES `roles`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `_users_department` ADD CONSTRAINT `_users_department_A_fkey` FOREIGN KEY (`A`) REFERENCES `department`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `_users_department` ADD CONSTRAINT `_users_department_B_fkey` FOREIGN KEY (`B`) REFERENCES `users`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;

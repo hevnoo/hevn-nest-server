@@ -126,7 +126,7 @@ export class AuthService {
         if (username === 'admin') {
           rolesData = await this.prismaService.roles.findMany({
             where: {
-              OR: [{ value: 'admin' }, { value: 'editor' }],
+              OR: [{ value: 'admin' }],
               deletetime: BigInt(0),
             },
           });

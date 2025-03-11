@@ -102,6 +102,15 @@ export class GeneralService {
       // if (rest.name) {
       //   baseWhere['name'] = { contains: rest.name };
       // }
+      if (model === 'menu') {
+        const userInfo = await this.prisma.users.findUnique({
+          where: { id: user.id },
+          include: { roles: true },
+        });
+        const userRoles = userInfo?.roles?.map((role) => role.value);
+        // 返回用户拥有的菜单
+        baseWhere['roles'] = { some: { value: { in: userRoles } } };
+      }
 
       // 构建查询选项
       const options: any = {

@@ -2,267 +2,97 @@
 /* 初始化添加数据，npx prisma db seed */
 import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();
+import {
+  dictTypeData,
+  dictData,
+  roleData,
+  buttonData,
+  menuData,
+  departmentData,
+} from './seed-data';
 
-async function main() {
-  // 1. 初始化角色相关字典
-  const roleTypes = [
-    {
-      value: 'super_admin',
-      label: '超级管理员',
-      label_en: 'Super Admin',
-      order: 1,
-      remark: '系统超级管理员',
-      remark_en: 'System Super Administrator',
-      is_default: true,
-    },
-    {
-      value: 'admin',
-      label: '管理员',
-      label_en: 'Admin',
-      order: 2,
-      remark: '系统管理员',
-      remark_en: 'System Administrator',
-    },
-    {
-      value: 'editor',
-      label: '编辑',
-      label_en: 'Editor',
-      order: 3,
-      remark: '内容编辑',
-      remark_en: 'Content Editor',
-    },
-    {
-      value: 'user',
-      label: '普通用户',
-      label_en: 'Normal User',
-      order: 4,
-      remark: '普通用户',
-      remark_en: 'Normal User',
-    },
-  ];
-
-  for (const role of roleTypes) {
-    await prisma.dict.upsert({
-      where: {
-        code_value_deletetime: {
-          code: 'role_type',
-          value: role.value,
-          deletetime: BigInt(0),
+async function createDictType() {
+  const newData: any = [];
+  for (const item of dictTypeData) {
+    newData.push(
+      await prisma.dict_type.upsert({
+        where: {
+          value_deletetime: {
+            value: item.value,
+            deletetime: BigInt(0),
+          },
         },
-      },
-      update: {},
-      create: {
-        name: '角色类型',
-        name_en: 'Role Type',
-        code: 'role_type',
-        value: role.value,
-        label: role.label,
-        label_en: role.label_en,
-        type: 'string',
-        order: role.order,
-        status: 1,
-        is_default: role.is_default ?? false,
-        remark: role.remark,
-        remark_en: role.remark_en,
-      },
-    });
+        update: {},
+        create: {
+          name: item.name,
+          value: item.value,
+          description: item.description,
+        },
+      }),
+    );
+  }
+  return newData;
+}
+
+async function createDict(dictTypeData) {
+  const newData: any = [];
+  for (const item of dictTypeData) {
+    for (const subItem of dictData) {
+      newData.push(
+        await prisma.dict.upsert({
+          where: {
+            dict_value_dict_type_id_deletetime: {
+              dict_value: subItem.dict_value,
+              dict_type_id: item.id,
+              deletetime: BigInt(0),
+            },
+          },
+          update: {},
+          create: {
+            dict_name: subItem.dict_name,
+            dict_value: subItem.dict_value,
+            language: subItem.language,
+            dict_type_id: item.id,
+          },
+        }),
+      );
+    }
   }
 
-  // 2. 初始化按钮权限相关字典
-  const buttonTypes = [
-    { value: 'add', label: '新增', label_en: 'Add', order: 1 },
-    { value: 'edit', label: '编辑', label_en: 'Edit', order: 2 },
-    { value: 'detail', label: '详情', label_en: 'Detail', order: 3 },
-    { value: 'delete', label: '删除', label_en: 'Delete', order: 4 },
-  ];
+  return newData;
+}
 
-  for (const btn of buttonTypes) {
-    await prisma.dict.upsert({
-      where: {
-        code_value_deletetime: {
-          code: 'button_type',
-          value: btn.value,
-          deletetime: BigInt(0),
+async function createRoles() {
+  const newData: any = [];
+  for (const item of roleData) {
+    newData.push(
+      await prisma.roles.upsert({
+        where: {
+          value_deletetime: {
+            value: item.value,
+            deletetime: BigInt(0),
+          },
         },
-      },
-      update: {},
-      create: {
-        name: '按钮类型',
-        name_en: 'Button Type',
-        code: 'button_type',
-        value: btn.value,
-        label: btn.label,
-        label_en: btn.label_en,
-        type: 'string',
-        order: btn.order,
-        status: 1,
-      },
-    });
+        update: {},
+        create: {
+          name: item.name,
+          value: item.value,
+          order: item.order,
+        },
+      }),
+    );
   }
+  return newData;
+}
 
-  // 3. 初始化菜单字典
-  const menuDict = [
-    {
-      value: 'home',
-      label: '首页',
-      label_en: 'Home',
-      path: '/home',
-      component: '/home/HomeView',
-      order: 1,
-      icon: 'House',
-      parent_value: '',
-      redirect: '',
-      meta: {
-        title: '首页',
-        icon: 'House',
-        keepAlive: false,
-      },
-    },
-    {
-      value: 'system',
-      label: '系统设置',
-      label_en: 'System',
-      path: '/system-settings',
-      component: '',
-      order: 2,
-      icon: 'Setting',
-      parent_value: '', // 顶级菜单
-      redirect: '/system-settings/user-management', // 可选的重定向
-      meta: {
-        title: '系统设置',
-        icon: 'Setting',
-        keepAlive: false,
-      },
-    },
-    {
-      value: 'user',
-      label: '用户管理',
-      label_en: 'Users',
-      path: '/system-settings/user-management',
-      component: '/system-settings/user-management/UserManagementView',
-      order: 1,
-      icon: 'User',
-      parent_value: 'system',
-      redirect: '',
-      meta: {
-        title: '用户管理',
-        icon: 'User',
-        keepAlive: false,
-      },
-    },
-    {
-      value: 'role',
-      label: '角色管理',
-      label_en: 'Roles',
-      path: '/system-settings/role-management',
-      component: '/system-settings/role-management/RoleManagementView',
-      order: 2,
-      icon: 'User',
-      parent_value: 'system',
-      redirect: '',
-      meta: {
-        title: '角色管理',
-        icon: 'User',
-        keepAlive: false,
-      },
-    },
-    {
-      value: 'menu',
-      label: '菜单管理',
-      label_en: 'Menus',
-      path: '/system-settings/menu-management',
-      component: '/system-settings/menu-management/MenuManagementView',
-      order: 3,
-      icon: 'Menu',
-      parent_value: 'system',
-      redirect: '',
-      meta: {
-        title: '菜单管理',
-        icon: 'Menu',
-        keepAlive: false,
-      },
-    },
-  ];
-
-  for (const menu of menuDict) {
-    await prisma.dict.upsert({
-      where: {
-        code_value_deletetime: {
-          code: 'menu_type',
-          value: menu.value,
-          deletetime: BigInt(0),
-        },
-      },
-      update: {},
-      create: {
-        name: '菜单配置',
-        name_en: 'Menu Config',
-        code: 'menu_type',
-        value: menu.value,
-        label: menu.label,
-        label_en: menu.label_en,
-        type: 'string',
-        order: menu.order,
-        status: 1,
-        extra_data: {
-          name: menu.path.substring(1),
-          path: menu.path,
-          component: menu.component,
-          icon: menu.icon,
-          parent_value: menu.parent_value,
-          redirect: menu.redirect,
-          meta: menu.meta,
-        },
-      },
-    });
-  }
-
-  // ****************** 根据字典创建实际数据 ******************
-
-  // 4. 基于角色字典创建实际的角色数据
-  const roleDictData = await prisma.dict.findMany({
-    where: { code: 'role_type', deletetime: BigInt(0) },
-  });
-
-  for (const role of roleDictData) {
-    await prisma.roles.upsert({
-      where: {
-        value_deletetime: {
-          value: role.value,
-          deletetime: BigInt(0),
-        },
-      },
-      update: {},
-      create: {
-        name: role.label,
-        value: role.value,
-        description: role.remark,
-      },
-    });
-  }
-
-  // 5. 基于字典创建菜单
-  const menuDictData: any = await prisma.dict.findMany({
-    where: { code: 'menu_type', deletetime: BigInt(0) },
-  });
-
-  const buttonDictData: any = await prisma.dict.findMany({
-    where: { code: 'button_type', deletetime: BigInt(0) },
-  });
-  const baseButtons = buttonDictData.map((btn) => ({
-    name: btn.label,
-    value: btn.value,
-    order: btn.order,
-    deletetime: BigInt(0),
-  }));
-
-  // 先创建所有顶级菜单
-  for (const menu of menuDictData.filter((m) => !m.extra_data.parent_value)) {
+async function createMenu(rolesData) {
+  // 1. 先创建所有顶级菜单（parent_value 为空的）
+  for (const menu of menuData.filter((item) => !item.parent_value)) {
     await prisma.menu.upsert({
       where: {
-        value_deletetime: {
+        value_parent_id_deletetime: {
           value: menu.value,
-          // parent_id: null, // 修改为 null
+          parent_id: '',
           deletetime: BigInt(0),
         },
       },
@@ -270,105 +100,134 @@ async function main() {
       create: {
         label: menu.label,
         value: menu.value,
-        name: menu.extra_data.name,
-        path: menu.extra_data.path,
-        component: menu.extra_data.component,
-        redirect: menu.extra_data.redirect,
-        meta: menu.extra_data.meta,
-        icon: menu.extra_data.icon,
-        parent_id: null, // 修改为 null
+        path: menu.path,
+        name: menu.path.substring(1),
+        component: menu.component,
+        redirect: menu.redirect,
+        meta: menu.meta,
+        icon: menu.icon,
         order: menu.order,
+        roles: {
+          // connect: rolesData.map((role) => ({ id: role.id })),
+          // 给超级管理员分配菜单，管理员拥有菜单权限
+          connect: rolesData.filter((role) => role.value.includes('admin')),
+        },
       },
     });
   }
 
-  // 查询所有已创建的菜单
-  const parentMenus = await prisma.menu.findMany({
+  // 2. 获取所有已创建的菜单，用于查找父级ID
+  let existingMenus = await prisma.menu.findMany({
     where: { deletetime: BigInt(0) },
   });
 
-  // 创建子菜单
-  for (const menu of menuDictData) {
-    const parentMenu = menu.extra_data.parent_value
-      ? parentMenus.find((p) => p.value === menu.extra_data.parent_value)
-      : null;
-
-    // 如果是子菜单但找不到父菜单，则跳过
-    if (menu.extra_data.parent_value && !parentMenu) {
+  // 3. 创建子菜单
+  for (const menu of menuData.filter((item) => item.parent_value)) {
+    const parentMenu = existingMenus.find((m) => m.value === menu.parent_value);
+    if (!parentMenu) {
       console.warn(
-        `找不到父菜单: ${menu.extra_data.parent_value}, 跳过创建: ${menu.value}`,
+        `找不到父菜单: ${menu.parent_value}, 跳过创建: ${menu.value}`,
       );
       continue;
     }
 
-    await prisma.menu.upsert({
-      where: {
-        value_deletetime: {
+    existingMenus.push(
+      await prisma.menu.upsert({
+        where: {
+          value_parent_id_deletetime: {
+            value: menu.value,
+            parent_id: parentMenu.id,
+            deletetime: BigInt(0),
+          },
+        },
+        update: {},
+        create: {
+          label: menu.label,
           value: menu.value,
-          // parent_id: parentMenu?.id ?? null, // 修改为 null
+          path: menu.path,
+          name: menu.path.substring(1),
+          component: menu.component,
+          redirect: menu.redirect,
+          meta: menu.meta,
+          icon: menu.icon,
+          order: menu.order,
+          parent_id: parentMenu.id,
+          roles: {
+            // 给超级管理员分配菜单，管理员拥有菜单权限
+            connect: rolesData.filter((role) => role.value.includes('admin')),
+          },
+        },
+      }),
+    );
+  }
+}
+
+async function createDepartment() {
+  // 1. 先创建所有顶级（parent_value 为空的）
+  for (const department of departmentData.filter(
+    (item) => !item.parent_value,
+  )) {
+    await prisma.department.upsert({
+      where: {
+        code_parent_id_deletetime: {
+          code: department.code,
+          parent_id: '',
           deletetime: BigInt(0),
         },
       },
       update: {},
       create: {
-        label: menu.label,
-        value: menu.value,
-        name: menu.extra_data.name,
-        path: menu.extra_data.path,
-        component: menu.extra_data.component,
-        redirect: menu.extra_data.redirect,
-        meta: menu.extra_data.meta,
-        icon: menu.extra_data.icon,
-        parent_id: parentMenu?.id ?? null, // 修改为 null
-        order: menu.order,
-        // 只给子菜单添加按钮
-        ...(parentMenu
-          ? {
-              buttons: {
-                createMany: {
-                  data: baseButtons,
-                },
-              },
-            }
-          : {}),
+        name: department.name,
+        code: department.code,
+        order: department.order,
       },
     });
   }
 
-  // for (const menu of menuDictData.filter((m) => m.extra_data.parent_value)) {
-  //   const parentMenu = parentMenus.find(
-  //     (p) => p.value === menu.extra_data.parent_value,
-  //   );
-  //   if (!parentMenu) continue;
+  // 2. 获取所有已创建的，用于查找父级ID
+  let existingDepartments = await prisma.department.findMany({
+    where: { deletetime: BigInt(0) },
+  });
 
-  //   await prisma.menu.upsert({
-  //     where: {
-  //       value_parent_id_deletetime: {
-  //         value: menu.value,
-  //         parent_id: parentMenu.id,
-  //         deletetime: BigInt(0),
-  //       },
-  //     },
-  //     update: {},
-  //     create: {
-  //       name: menu.label,
-  //       value: menu.value,
-  //       path: menu.extra_data.path,
-  //       component: menu.extra_data.component,
-  //       redirect: menu.extra_data.redirect,
-  //       meta: menu.extra_data.meta,
-  //       icon: menu.extra_data.icon,
-  //       parent_id: parentMenu.id,
-  //       order: menu.order,
-  //       deletetime: BigInt(0),
-  //       buttons: {
-  //         createMany: {
-  //           data: baseButtons,
-  //         },
-  //       },
-  //     },
-  //   });
-  // }
+  // 3. 创建子级别
+  for (const department of departmentData.filter((item) => item.parent_value)) {
+    const parentDepartment = existingDepartments.find(
+      (m) => m.code === department.parent_value,
+    );
+    if (!parentDepartment) {
+      console.warn(
+        `找不到父级: ${department.parent_value}, 跳过创建: ${department.code}`,
+      );
+      continue;
+    }
+
+    existingDepartments.push(
+      await prisma.department.upsert({
+        where: {
+          code_parent_id_deletetime: {
+            code: department.code,
+            parent_id: parentDepartment.id,
+            deletetime: BigInt(0),
+          },
+        },
+        update: {},
+        create: {
+          name: department.name,
+          code: department.code,
+          order: department.order,
+          parent_id: parentDepartment.id,
+        },
+      }),
+    );
+  }
+}
+
+async function main() {
+  const dictTypeData = await createDictType();
+  await createDict(dictTypeData);
+  const rolesData = await createRoles();
+  await createMenu(rolesData);
+  await createDepartment();
 }
 
 main()
@@ -379,6 +238,38 @@ main()
   .finally(async () => {
     await prisma.$disconnect();
   });
+
+function arrayToTree(
+  items,
+  idField = 'id',
+  parentIdField = 'parentId',
+  childrenField = 'children',
+) {
+  const itemMap = {};
+
+  // 初始化每个节点
+  items.forEach((item) => {
+    itemMap[item[idField]] = { ...item, [childrenField]: [] };
+  });
+
+  const tree: any = [];
+
+  // 构建树结构
+  items.forEach((item) => {
+    if (item[parentIdField] === null) {
+      // 根节点
+      tree.push(itemMap[item[idField]]);
+    } else {
+      // 子节点
+      const parent = itemMap[item[parentIdField]];
+      if (parent) {
+        parent[childrenField].push(itemMap[item[idField]]);
+      }
+    }
+  });
+
+  return tree;
+}
 
 /* 
   使用 upsert 操作，它的工作原理是：

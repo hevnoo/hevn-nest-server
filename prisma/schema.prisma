@@ -24,8 +24,9 @@ model users {
   creator    String?  @db.Char(36)
   updater    String?  @db.Char(36)
 
-  roles roles[] @relation("users_roles") // 反向关联，表示多对多关系，虚拟字段
-  post  post[] //反向关联
+  roles      roles[]      @relation("users_roles") // 反向关联，表示多对多关系，虚拟字段
+  department department[] @relation("users_department") // 反向关联，表示多对多关系，虚拟字段
+  post       post[] //反向关联
 
   @@unique([email, deletetime]) // 复合唯一索引
   @@unique([openid, deletetime])
@@ -40,6 +41,7 @@ model roles {
   name        String       @db.VarChar(36) // 角色名称（如 "admin", "user"）
   value       String       @db.VarChar(36) // 角色值（如 "admin", "user"）
   description String? // 角色描述
+  order       Int          @default(0) // 排序
   // 关联关系
   users       users[]      @relation("users_roles") // 多对多
   permission  permission[] @relation("roles_permission") // 多对多关系
@@ -99,7 +101,7 @@ model menu {
   creator    String?   @db.Char(36)
   updater    String?   @db.Char(36)
 
-  @@unique([value, deletetime])
+  @@unique([value, parent_id, deletetime])
   @@index([parent_id, deletetime])
 }
 
@@ -124,26 +126,64 @@ model buttons {
   @@index([menu_id, deletetime]) // 添加索引提高查询性能
 }
 
+model department {
+  id          String       @id @default(cuid())
+  name        String       @db.VarChar(50) // 部门名称
+  code        String       @db.VarChar(50) // 部门编码
+  order       Int          @default(0) // 排序
+  status      Int          @default(1) // 状态：0-禁用 1-启用
+  description String?      @db.VarChar(255) // 描述
+  // 关联关系
+  parent_id   String? // 父级部门ID
+  parent      department?  @relation("department_tree", fields: [parent_id], references: [id], onDelete: SetNull)
+  children    department[] @relation("department_tree")
+  users       users[]      @relation("users_department") // 反向关联，表示多对多关系，虚拟字段
+  // 通用字段
+  createtime  DateTime     @default(now())
+  updatetime  DateTime     @updatedAt
+  deletetime  BigInt       @default(0)
+  creator     String?      @db.Char(36)
+  updater     String?      @db.Char(36)
+
+  @@unique([code, parent_id, deletetime])
+  @@index([parent_id, deletetime])
+}
+
+model dict_type {
+  id          String   @id @default(cuid())
+  name        String   @db.VarChar(50) // 字典类型名称
+  value       String   @db.VarChar(50) // 字典类型值
+  order       Int      @default(0) // 排序
+  status      Boolean  @default(true)
+  description String?  @db.VarChar(255) // 描述
+  // 关联关系
+  dict        dict[] // 关联的字典项
+  // parent_id   String? // 父级ID
+  // parent      dict_type?  @relation("dict_type_tree", fields: [parent_id], references: [id], onDelete: SetNull)
+  // children    dict_type[] @relation("dict_type_tree")
+  // 通用字段
+  createtime  DateTime @default(now())
+  updatetime  DateTime @updatedAt
+  deletetime  BigInt   @default(0)
+  creator     String?  @db.Char(36)
+  updater     String?  @db.Char(36)
+
+  @@unique([value, deletetime])
+  @@index([deletetime])
+}
+
 model dict {
   id         String    @id @default(cuid())
-  name       String    @db.VarChar(50) // 字典名称
-  name_en    String?   @db.VarChar(50) // 英文名称
-  code       String    @db.VarChar(50) // 字典编码
-  value      String    @db.VarChar(50) // 字典值
-  label      String    @db.VarChar(50) // 字典标签(中文)
-  label_en   String?   @db.VarChar(50) // 字典标签(英文)
-  type       String?   @db.VarChar(20) // 字典类型：string/number/boolean/date等
+  dict_name  String    @db.VarChar(50) // 翻译名称label
+  dict_value String    @db.VarChar(50) // 取值
+  language   String?   @db.VarChar(10) // 语言类型：zh/en等
   order      Int       @default(0) // 排序
-  status     Int       @default(1) // 状态：0-禁用 1-启用
-  parent_id  String? // 父级ID
-  remark     String?   @db.VarChar(255) // 备注说明(中文)
-  remark_en  String?   @db.VarChar(255) // 备注说明(英文)
-  color      String?   @db.VarChar(20) // 颜色值(如：#FF0000)
-  css_class  String?   @db.VarChar(100) // 样式属性
-  list_class String?   @db.VarChar(100) // 表格回显样式
+  status     Boolean   @default(true)
+  remark     String?   @db.VarChar(255) // 备注说明
+  color      String?   @db.VarChar(20) // 颜色值
   is_default Boolean   @default(false) // 是否默认
-  extra_data Json? // 额外数据，灵活存储
-  valid_from DateTime? @db.Timestamp // 生效时间
+  json_data  Json? // 额外数据，灵活存储
+  valid_from DateTime? @db.Timestamp // 生效时间，时间戳
   valid_to   DateTime? @db.Timestamp // 失效时间
 
   // 通用字段
@@ -154,12 +194,11 @@ model dict {
   updater    String?  @db.Char(36)
 
   // 关联关系
-  parent   dict?  @relation("dict_tree", fields: [parent_id], references: [id], onDelete: SetNull)
-  children dict[] @relation("dict_tree")
+  dict_type_id String    @db.VarChar(50) // 字典类型编码
+  dict_type    dict_type @relation(fields: [dict_type_id], references: [id]) // 添加关联
 
-  @@unique([code, value, deletetime])
-  @@index([code, status]) // 常一起使用的可使用组合索引优化查询性能
-  @@index([parent_id, deletetime])
+  @@unique([dict_value, dict_type_id, deletetime]) // 常一起使用的可使用组合索引优化查询性能
+  @@index([deletetime])
 }
 
 model post {
