@@ -118,7 +118,7 @@ CREATE TABLE `department` (
     `updater` CHAR(36) NULL,
 
     INDEX `department_parent_id_deletetime_idx`(`parent_id`, `deletetime`),
-    UNIQUE INDEX `department_code_deletetime_key`(`code`, `deletetime`),
+    UNIQUE INDEX `department_code_parent_id_deletetime_key`(`code`, `parent_id`, `deletetime`),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
@@ -127,6 +127,7 @@ CREATE TABLE `dict_type` (
     `id` VARCHAR(191) NOT NULL,
     `name` VARCHAR(50) NOT NULL,
     `value` VARCHAR(50) NOT NULL,
+    `order` INTEGER NOT NULL DEFAULT 0,
     `status` BOOLEAN NOT NULL DEFAULT true,
     `description` VARCHAR(255) NULL,
     `createtime` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
@@ -162,7 +163,7 @@ CREATE TABLE `dict` (
     `dict_type_id` VARCHAR(50) NOT NULL,
 
     INDEX `dict_deletetime_idx`(`deletetime`),
-    UNIQUE INDEX `dict_dict_value_dict_type_id_deletetime_key`(`dict_value`, `dict_type_id`, `deletetime`),
+    UNIQUE INDEX `dict_dict_value_dict_type_id_language_deletetime_key`(`dict_value`, `dict_type_id`, `language`, `deletetime`),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 

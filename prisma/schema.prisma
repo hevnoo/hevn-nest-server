@@ -197,7 +197,7 @@ model dict {
   dict_type_id String    @db.VarChar(50) // 字典类型编码
   dict_type    dict_type @relation(fields: [dict_type_id], references: [id]) // 添加关联
 
-  @@unique([dict_value, dict_type_id, deletetime]) // 常一起使用的可使用组合索引优化查询性能
+  @@unique([dict_value, dict_type_id, language, deletetime]) // 常一起使用的可使用组合索引优化查询性能
   @@index([deletetime])
 }
 
