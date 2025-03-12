@@ -37,12 +37,15 @@ async function createDictType() {
 async function createDict(dictTypeData) {
   const newData: any = [];
   for (const item of dictTypeData) {
-    for (const subItem of dictData) {
+    for (const subItem of dictData.filter(
+      (f) => f.dict_type_id_value === item.value,
+    )) {
       newData.push(
         await prisma.dict.upsert({
           where: {
-            dict_value_dict_type_id_deletetime: {
+            dict_value_dict_type_id_language_deletetime: {
               dict_value: subItem.dict_value,
+              language: subItem.language,
               dict_type_id: item.id,
               deletetime: BigInt(0),
             },

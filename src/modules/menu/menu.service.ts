@@ -14,7 +14,7 @@ export class MenuService {
   constructor(private prisma: PrismaService) {}
 
   // 获取列表
-  async getList(params: QueryParams, user?: any): Promise<BaseResponse> {
+  async getMenuList(params: QueryParams, user?: any): Promise<BaseResponse> {
     // 权限检查
     // const hasPermission = await this.checkUserPermission(model, 'read', user);
     // if (!hasPermission) {
