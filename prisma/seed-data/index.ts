@@ -34,8 +34,8 @@ export const departmentData = [
 
 export const menuData = [
   {
-    value: 'home',
     label: '首页',
+    name: 'home',
     path: '/home',
     component: '/home/HomeView',
     order: 1,
@@ -49,8 +49,8 @@ export const menuData = [
     },
   },
   {
-    value: 'system',
     label: '系统设置',
+    name: 'system',
     path: '/system-settings',
     component: '',
     order: 2,
@@ -64,8 +64,8 @@ export const menuData = [
     },
   },
   {
-    value: 'user',
     label: '用户管理',
+    name: 'user',
     path: '/system-settings/user-management',
     component: '/system-settings/user-management/UserManagementView',
     order: 1,
@@ -79,8 +79,8 @@ export const menuData = [
     },
   },
   {
-    value: 'role',
     label: '角色管理',
+    name: 'role',
     path: '/system-settings/role-management',
     component: '/system-settings/role-management/RoleManagementView',
     order: 2,
@@ -94,8 +94,8 @@ export const menuData = [
     },
   },
   {
-    value: 'menu',
     label: '菜单管理',
+    name: 'menu',
     path: '/system-settings/menu-management',
     component: '/system-settings/menu-management/MenuManagementView',
     order: 3,
@@ -109,8 +109,8 @@ export const menuData = [
     },
   },
   {
-    value: 'dept',
     label: '部门管理',
+    name: 'dept',
     path: '/system-settings/dept-management',
     component: '/system-settings/dept-management/DeptManagementView',
     order: 4,
@@ -124,8 +124,8 @@ export const menuData = [
     },
   },
   {
-    value: 'dict',
     label: '字典管理',
+    name: 'dict',
     path: '/system-settings/dict-management',
     component: '/system-settings/dict-management/DictManagementView',
     order: 5,

@@ -62,9 +62,8 @@ CREATE TABLE `permission` (
 CREATE TABLE `menu` (
     `id` VARCHAR(191) NOT NULL,
     `label` VARCHAR(50) NOT NULL,
-    `value` VARCHAR(50) NOT NULL,
+    `name` VARCHAR(50) NULL,
     `path` VARCHAR(100) NULL,
-    `name` VARCHAR(100) NULL,
     `component` VARCHAR(100) NULL,
     `redirect` VARCHAR(100) NULL,
     `meta` JSON NULL,
@@ -79,7 +78,7 @@ CREATE TABLE `menu` (
     `updater` CHAR(36) NULL,
 
     INDEX `menu_parent_id_deletetime_idx`(`parent_id`, `deletetime`),
-    UNIQUE INDEX `menu_value_parent_id_deletetime_key`(`value`, `parent_id`, `deletetime`),
+    UNIQUE INDEX `menu_name_parent_id_deletetime_key`(`name`, `parent_id`, `deletetime`),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 

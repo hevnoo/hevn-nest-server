@@ -78,12 +78,11 @@ model permission {
 model menu {
   id         String    @id @default(cuid())
   label      String    @db.VarChar(50) // 菜单名称
-  value      String    @db.VarChar(50) // 菜单值
+  name       String?   @db.VarChar(50) // 路由名称编码
   path       String?   @db.VarChar(100) // 路由路径
-  name       String?   @db.VarChar(100) // 路由名称
   component  String?   @db.VarChar(100) // 组件路径
   redirect   String?   @db.VarChar(100) // 重定向路径
-  meta       Json? // 存储元数据，包含 title、icon、keepAlive 等
+  meta       Json? // 存储元数据，包含 title、icon、keepAlive 等。默认返回对象格式的数据，存入的数据是对象
   // meta 示例: { "title": "系统管理", "icon": "SettingOutlined", "keepAlive": true }
   icon       String?   @db.VarChar(50) // 图标
   order      Int       @default(0) // 排序
@@ -101,7 +100,7 @@ model menu {
   creator    String?   @db.Char(36)
   updater    String?   @db.Char(36)
 
-  @@unique([value, parent_id, deletetime])
+  @@unique([name, parent_id, deletetime])
   @@index([parent_id, deletetime])
 }
 

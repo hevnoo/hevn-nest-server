@@ -93,8 +93,8 @@ async function createMenu(rolesData) {
   for (const menu of menuData.filter((item) => !item.parent_value)) {
     await prisma.menu.upsert({
       where: {
-        value_parent_id_deletetime: {
-          value: menu.value,
+        name_parent_id_deletetime: {
+          name: menu.name,
           parent_id: '',
           deletetime: BigInt(0),
         },
@@ -102,9 +102,8 @@ async function createMenu(rolesData) {
       update: {},
       create: {
         label: menu.label,
-        value: menu.value,
+        name: menu.name,
         path: menu.path,
-        name: menu.path.substring(1),
         component: menu.component,
         redirect: menu.redirect,
         meta: menu.meta,
@@ -126,10 +125,10 @@ async function createMenu(rolesData) {
 
   // 3. 创建子菜单
   for (const menu of menuData.filter((item) => item.parent_value)) {
-    const parentMenu = existingMenus.find((m) => m.value === menu.parent_value);
+    const parentMenu = existingMenus.find((m) => m.name === menu.parent_value);
     if (!parentMenu) {
       console.warn(
-        `找不到父菜单: ${menu.parent_value}, 跳过创建: ${menu.value}`,
+        `找不到父菜单: ${menu.parent_value}, 跳过创建: ${menu.name}`,
       );
       continue;
     }
@@ -137,8 +136,8 @@ async function createMenu(rolesData) {
     existingMenus.push(
       await prisma.menu.upsert({
         where: {
-          value_parent_id_deletetime: {
-            value: menu.value,
+          name_parent_id_deletetime: {
+            name: menu.name,
             parent_id: parentMenu.id,
             deletetime: BigInt(0),
           },
@@ -146,9 +145,8 @@ async function createMenu(rolesData) {
         update: {},
         create: {
           label: menu.label,
-          value: menu.value,
+          name: menu.name,
           path: menu.path,
-          name: menu.path.substring(1),
           component: menu.component,
           redirect: menu.redirect,
           meta: menu.meta,
