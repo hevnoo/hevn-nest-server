@@ -101,7 +101,7 @@ async function createMenu(rolesData) {
       },
       update: {},
       create: {
-        label: menu.label,
+        title: menu.title,
         name: menu.name,
         path: menu.path,
         component: menu.component,
@@ -144,7 +144,7 @@ async function createMenu(rolesData) {
         },
         update: {},
         create: {
-          label: menu.label,
+          title: menu.title,
           name: menu.name,
           path: menu.path,
           component: menu.component,

@@ -61,7 +61,7 @@ CREATE TABLE `permission` (
 -- CreateTable
 CREATE TABLE `menu` (
     `id` VARCHAR(191) NOT NULL,
-    `label` VARCHAR(50) NOT NULL,
+    `title` VARCHAR(50) NOT NULL,
     `name` VARCHAR(50) NULL,
     `path` VARCHAR(100) NULL,
     `component` VARCHAR(100) NULL,

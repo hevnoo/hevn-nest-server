@@ -77,7 +77,7 @@ model permission {
 
 model menu {
   id         String    @id @default(cuid())
-  label      String    @db.VarChar(50) // 菜单名称
+  title      String    @db.VarChar(50) // 菜单名称
   name       String?   @db.VarChar(50) // 路由名称编码
   path       String?   @db.VarChar(100) // 路由路径
   component  String?   @db.VarChar(100) // 组件路径

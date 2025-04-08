@@ -34,10 +34,10 @@ export const departmentData = [
 
 export const menuData = [
   {
-    label: '首页',
+    title: '首页',
     name: 'home',
     path: '/home',
-    component: '/home/HomeView',
+    component: '/home/index.vue',
     order: 1,
     icon: 'House',
     parent_value: '', // 临时标记
@@ -49,14 +49,14 @@ export const menuData = [
     },
   },
   {
-    label: '系统设置',
+    title: '系统设置',
     name: 'system',
-    path: '/system-settings',
+    path: '/system',
     component: '',
     order: 2,
     icon: 'Setting',
     parent_value: '', // 顶级菜单
-    redirect: '/system-settings/user-management', // 可选的重定向
+    redirect: '/system/user-management', // 可选的重定向
     meta: {
       title: '系统设置',
       icon: 'Setting',
@@ -64,10 +64,10 @@ export const menuData = [
     },
   },
   {
-    label: '用户管理',
+    title: '用户管理',
     name: 'user',
-    path: '/system-settings/user-management',
-    component: '/system-settings/user-management/UserManagementView',
+    path: '/system/user-management',
+    component: '/system/user-management/index.vue',
     order: 1,
     icon: 'User',
     parent_value: 'system',
@@ -79,10 +79,10 @@ export const menuData = [
     },
   },
   {
-    label: '角色管理',
+    title: '角色管理',
     name: 'role',
-    path: '/system-settings/role-management',
-    component: '/system-settings/role-management/RoleManagementView',
+    path: '/system/role-management',
+    component: '/system/role-management/index.vue',
     order: 2,
     icon: 'User',
     parent_value: 'system',
@@ -94,10 +94,10 @@ export const menuData = [
     },
   },
   {
-    label: '菜单管理',
+    title: '菜单管理',
     name: 'menu',
-    path: '/system-settings/menu-management',
-    component: '/system-settings/menu-management/MenuManagementView',
+    path: '/system/menu-management',
+    component: '/system/menu-management/index.vue',
     order: 3,
     icon: 'Menu',
     parent_value: 'system',
@@ -109,10 +109,10 @@ export const menuData = [
     },
   },
   {
-    label: '部门管理',
+    title: '部门管理',
     name: 'dept',
-    path: '/system-settings/dept-management',
-    component: '/system-settings/dept-management/DeptManagementView',
+    path: '/system/dept-management',
+    component: '/system/dept-management/index.vue',
     order: 4,
     icon: 'Avatar',
     parent_value: 'system',
@@ -124,10 +124,10 @@ export const menuData = [
     },
   },
   {
-    label: '字典管理',
+    title: '字典管理',
     name: 'dict',
-    path: '/system-settings/dict-management',
-    component: '/system-settings/dict-management/DictManagementView',
+    path: '/system/dict-management',
+    component: '/system/dict-management/index.vue',
     order: 5,
     icon: 'Memo',
     parent_value: 'system',
